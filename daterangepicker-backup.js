@@ -78,7 +78,8 @@
             customRangeLabel: 'Custom Range',
             daysOfWeek: moment.weekdaysMin(),
             monthNames: moment.monthsShort(),
-            firstDay: moment.localeData().firstDayOfWeek()
+            firstDay: moment.localeData().firstDayOfWeek(),
+            isBuddhist: false
         };
 
         this.callback = function() { };
@@ -158,6 +159,10 @@
                 elem.innerHTML = options.locale.customRangeLabel;
                 var rangeHtml = elem.value;
                 this.locale.customRangeLabel = rangeHtml;
+            }
+
+            if (typeof options.locale.isBuddhist === 'boolean'){
+                this.locale.isBuddhist = options.locale.isBuddhist;
             }
         }
         this.container.addClass(this.locale.direction);
@@ -505,7 +510,11 @@
 
             this.previousRightTime = this.endDate.clone();
 
-            this.container.find('.drp-selected').html(this.startDate.format(this.locale.format) + this.locale.separator + this.endDate.format(this.locale.format));
+            this.container.find('.drp-selected').html(
+                this.formatDate(this.startDate) +
+                this.locale.separator +
+                this.formatDate(this.endDate)
+            );
 
             if (!this.isShowing)
                 this.updateElement();
@@ -532,7 +541,11 @@
                 }
             }
             if (this.endDate)
-                this.container.find('.drp-selected').html(this.startDate.format(this.locale.format) + this.locale.separator + this.endDate.format(this.locale.format));
+                this.container.find('.drp-selected').html(
+                    this.formatDate(this.startDate) +
+                    this.locale.separator +
+                    this.formatDate(this.endDate)
+                );
             this.updateMonthsInView();
             this.updateCalendars();
             this.updateFormInputs();
@@ -704,7 +717,11 @@
                 html += '<th></th>';
             }
 
-            var dateHtml = this.locale.monthNames[calendar[1][1].month()] + calendar[1][1].format(" YYYY");
+            if (this.locale.isBuddhist === true) {
+                var dateHtml = this.locale.monthNames[calendar[1][1].month()] + ' ' + (calendar[1][1].year() + 543);
+            } else {
+                var dateHtml = this.locale.monthNames[calendar[1][1].month()] + calendar[1][1].format(" YYYY");
+            }
 
             if (this.showDropdowns) {
                 var currentMonth = calendar[1][1].month();
@@ -1544,14 +1561,25 @@
 
         updateElement: function() {
             if (this.element.is('input') && this.autoUpdateInput) {
-                var newValue = this.startDate.format(this.locale.format);
+                var newValue = this.formatDate(this.startDate);
                 if (!this.singleDatePicker) {
-                    newValue += this.locale.separator + this.endDate.format(this.locale.format);
+                    newValue += this.locale.separator + this.formatDate(this.endDate);
                 }
                 if (newValue !== this.element.val()) {
                     this.element.val(newValue).trigger('change');
                 }
             }
+        },
+
+        formatDate: function(date) {
+            var formattedDate = date.format(this.locale.format);
+            if (this.locale.isBuddhist === true) {
+                // Adjust year to BE by adding 543
+                formattedDate = formattedDate.replace(/(\d{4})/, function(year) {
+                    return parseInt(year) + 543;
+                });
+            }
+            return formattedDate;
         },
 
         remove: function() {
